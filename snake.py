@@ -3,10 +3,10 @@ import curses
 ## Class describing our snake
 class Snake:
 	def __init__(self, head, speed):
-		self.__x	= head[0]
-		self.__y	= head[1]
-		self.__vx	= speed[0] 
-		self.__vy	= speed[1] 
+		self.__x	= [head[0]]
+		self.__y	= [head[1]]
+		self.__vx	= [speed[0]]
+		self.__vy	= [speed[1]] 
 		self.__length	= 1
 		self.__color	= 1
 		self.__shape	= '#'
@@ -29,30 +29,43 @@ class Snake:
 		self.__length += 1
 		self.__x.append(-1 * np.sign(self.__vx[-1]) + self.__x[-1])
 		self.__y.append(-1 * np.sign(self.__vy[-1]) + self.__y[-1])
+		self.__vx.append(self.__vx[-1])
+		self.__vy.append(self.__vy[-1])
 	
 	def move(self, direction : int):
 		# direction key codes: UP = -1, DOWN = 1, LEFT = -2, RIGHT = 2
 		# turn head up or down 
-		if self.__vx != 0 and abs(direction) == 1:
+		if self.__vx[0] != 0 and abs(direction) == 1:
 			self.__vy[0] = np.sign(direction) * abs(self.__vx[0])
 			self.__vx[0] = 0
 			self.__y[0] += self.__vy[0]
 		# turn head left or right 
-		elif self.__vy != 0 and abs(direction) == 2:
+		elif self.__vy[0] != 0 and abs(direction) == 2:
 			self.__vx[0] = np.sign(direction) * abs(self.__vy[0])
 			self.__vy[0] = 0
 			self.__x[0] += self.__vx[0]
+		else: 
+			self.__y[0] += self.__vy[0]
+			self.__x[0] += self.__vx[0]
 		# propagate snake body
 		for i in range(self.__length - 1):
-			self.__x[i + 1] += self.__vx[i + 1]
-			self.__y[i + 1] += self.__vy[i + 1]
-			self.__vx[i + 1] = self.__vx[i]
-			self.__vy[i + 1] = self.__vy[i]
+			self.__x[-1 - i] += self.__vx[-1 - i]
+			self.__y[-1 - i] += self.__vy[-1 - i]
+			self.__vx[-1 - i] = self.__vx[-2 - i]
+			self.__vy[-1 - i] = self.__vy[-2 - i]
 
 	def head_pos(self):
 		return self.__x[0], self.__y[0]
 
+	def head_vel(self):
+		return self.__vx[0], self.__vy[0]
+	
+	def pos(self, i):
+		return self.__x[i], self.__y[i]
+	
+	def vel(self, i):
+		return self.__vx[i], self.__vy[i]
+
 	def draw(self, window):
 		for i in range(self.__length):
 			window.addch(self.__y[i], self.__x[i], self.__shape, curses.color_pair(self.__color)) 
-		

@@ -4,14 +4,15 @@ from curses import KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
 from random import randint
 from .snake import Snake
 
+
 ESCAPE = 27
 ROWS = 25
-COLUMNS = 27
+COLUMNS = 47
 stdscr = curses.initscr()
 
 def main(stdscr):
 	# Initialize snake and food
-	snake = Snake([[COLUMNS//2], [ROWS//2]], [0, 1])
+	snake = Snake([COLUMNS//2, ROWS//2], [1, 0])
 	# Draw new curses window
 	win = curses.newwin(ROWS, COLUMNS)
 	curses.noecho()
@@ -31,11 +32,19 @@ def main(stdscr):
 	q = win.getch()
 	win.nodelay(True)
 
+	# food has been eaten so regenerate at first run
+	regenerate_food = True
 	while True:
-		# Draw snake and food
+		# start with checking whether food has to be regenerated
+		if regenerate_food:
+			food_x = randint(1, COLUMNS - 2) 
+			food_y = randint(1, ROWS - 2) 
+			regenerate_food = False
+		# draw snake and food
 		win.clear()
 		win.border()
 		snake.draw(win)
+		win.addch(food_y, food_x, '*', curses.color_pair(2))
 		key = win.getch()
 		# move snake based on user input
 		if key == ESCAPE or key == ord('q'):
@@ -48,11 +57,17 @@ def main(stdscr):
 			snake.move(-2)
 		elif key == curses.KEY_RIGHT:
 			snake.move(2)
-		# chech if the snake crashed into wall or itself
+		else:
+			snake.move(0)
+		# check if the snake crashed into wall or itself
 		if snake.check_if_crashed(ROWS, COLUMNS):
 			win.addstr(ROWS//2, COLUMNS//2, "You lost!", curses.color_pair(3))
 			time.sleep(2)
 			break
+		# check if food was eaten
+		if snake.head_pos()[0] == food_x and snake.head_pos()[1] == food_y:
+			snake.increase_length()
+			regenerate_food = True
 		# refresh window
 		win.refresh()
 		time.sleep(.2)
